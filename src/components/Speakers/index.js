@@ -65,16 +65,20 @@ const Speakers = () => {
       .map((single) => single.id)
       .indexOf(speakerRecord.id);
 
-    await axios.put(
-      `http://localhost:4000/speakers/${speakerRecord.id}`,
-      toggledSpeakerRecord
-    );
-
-    setSpeakers([
-      ...speakers.slice(0, speakerIndex),
-      toggledSpeakerRecord,
-      ...speakers.slice(speakerIndex + 1),
-    ]);
+    try {
+      await axios.put(
+        `http://localhost:4000/speakers/${speakerRecord.id}`,
+        toggledSpeakerRecord
+      );
+      setSpeakers([
+        ...speakers.slice(0, speakerIndex),
+        toggledSpeakerRecord,
+        ...speakers.slice(speakerIndex + 1),
+      ]);
+    } catch (e) {
+      setStatus(REQUEST_STATUS.ERROR);
+      setError(e);
+    }
   };
 
   return (
@@ -85,7 +89,7 @@ const Speakers = () => {
       {isError && (
         <div>
           Loading error... Is the json-server up and running? (try "npm run
-          json-server" at your terminal <br />
+          json-server" at your terminal) <br />
           <b>ERROR: {error.message}</b>
         </div>
       )}
