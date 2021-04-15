@@ -1,31 +1,41 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useReducer } from "react";
 import SearchBar from "../SearchBar";
 // import speakersData from "./data.js";
 import SingleSpeaker from "./singleSpeaker";
 import axios from "axios";
+import {
+  GET_ALL_SUCCESS,
+  GET_ALL_FAILURE,
+  PUT_SUCESS,
+  PUT_FAILURE,
+} from "../../actions";
+import RequestReducer, { REQUEST_STATUS } from "../../reducers";
 
 const Speakers = () => {
-  const REQUEST_STATUS = {
-    LOADING: "loading",
-    SUCCESS: "success",
-    ERROR: "error",
-  };
-
   const [searchQuery, setSearchQuery] = useState("");
-  const [speakers, setSpeakers] = useState([]);
 
-  const [status, setStatus] = useState(REQUEST_STATUS.LOADING);
-  const [error, setError] = useState({});
+  const [{ records: speakers, status, error }, dispatch] = useReducer(
+    RequestReducer,
+    {
+      records: [],
+      status: REQUEST_STATUS.LOADING,
+      error: null,
+    }
+  );
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get("http://localhost:4000/speakers");
-        setSpeakers(response.data);
-        setStatus(REQUEST_STATUS.SUCCESS);
+        dispatch({
+          records: response.data,
+          type: GET_ALL_SUCCESS,
+        });
       } catch (e) {
-        setStatus(REQUEST_STATUS.ERROR);
-        setError(e);
+        dispatch({
+          type: GET_ALL_FAILURE,
+          error: e,
+        });
       }
     };
     fetchData();
@@ -52,31 +62,26 @@ const Speakers = () => {
       );
     });
 
-  const toggleFavoriteStatus = (speakerRecord) => {
-    return {
-      ...speakerRecord,
-      isFavorite: !speakerRecord.isFavorite,
-    };
-  };
-
   const toggleButtonHandler = async (speakerRecord) => {
-    const toggledSpeakerRecord = toggleFavoriteStatus(speakerRecord);
-    const speakerIndex = speakers
-      .map((single) => single.id)
-      .indexOf(speakerRecord.id);
-
     try {
+      const toggledFavoriteStatus = {
+        ...speakerRecord,
+        isFavorite: !speakerRecord.isFavorite,
+      };
+
       await axios.put(
         `http://localhost:4000/speakers/${speakerRecord.id}`,
-        toggledSpeakerRecord
+        toggledFavoriteStatus
       );
-      setSpeakers([
-        ...speakers.slice(0, speakerIndex),
-        toggledSpeakerRecord,
-        ...speakers.slice(speakerIndex + 1),
-      ]);
+      dispatch({
+        type: PUT_SUCCESS,
+        singleRecord: toggledFavoriteStatus,
+      });
     } catch (e) {
-      setStatus(REQUEST_STATUS.ERROR);
+      dispatch({
+        type: PUT_FAILURE,
+        error: e,
+      });
       setError(e);
     }
   };
