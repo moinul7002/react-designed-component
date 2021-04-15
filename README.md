@@ -1,1 +1,0 @@
-# react-search-designed-component
