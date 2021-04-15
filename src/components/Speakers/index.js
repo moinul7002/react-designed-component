@@ -5,16 +5,35 @@ import SingleSpeaker from "./singleSpeaker";
 import axios from "axios";
 
 const Speakers = () => {
+  const REQUEST_STATUS = {
+    LOADING: "loading",
+    SUCCESS: "success",
+    ERROR: "error",
+  };
+
   const [searchQuery, setSearchQuery] = useState("");
   const [speakers, setSpeakers] = useState([]);
 
+  const [status, setStatus] = useState(REQUEST_STATUS.LOADING);
+  const [error, setError] = useState({});
+
   useEffect(() => {
     const fetchData = async () => {
-      const response = await axios.get("http://localhost:4000/speakers");
-      setSpeakers(response.data);
+      try {
+        const response = await axios.get("http://localhost:4000/speakers");
+        setSpeakers(response.data);
+        setStatus(REQUEST_STATUS.SUCCESS);
+      } catch (e) {
+        setStatus(REQUEST_STATUS.ERROR);
+        setError(e);
+      }
     };
     fetchData();
   }, []);
+
+  const success = status === REQUEST_STATUS.SUCCESS;
+  const isLoading = status === REQUEST_STATUS.LOADING;
+  const isError = status === REQUEST_STATUS.ERROR;
 
   const mapSpeakers = speakers
     .filter((record) => {
@@ -61,9 +80,20 @@ const Speakers = () => {
   return (
     <>
       <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 grid-cols-1 gap-12">
-        {mapSpeakers}
-      </div>
+      {isLoading && <div>Loading...</div>}
+      {/* error handling */}
+      {isError && (
+        <div>
+          Loading error... Is the json-server up and running? (try "npm run
+          json-server" at your terminal <br />
+          <b>ERROR: {error.message}</b>
+        </div>
+      )}
+      {success && (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 grid-cols-1 gap-12">
+          {mapSpeakers}
+        </div>
+      )}
     </>
   );
 };
