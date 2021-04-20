@@ -1,7 +1,7 @@
 import {
   GET_ALL_SUCCESS,
   GET_ALL_FAILURE,
-  PUT_SUCESS,
+  PUT_SUCCESS,
   PUT_FAILURE,
 } from "../actions";
 
